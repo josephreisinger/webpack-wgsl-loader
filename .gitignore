@@ -14,9 +14,9 @@ npm-debug.log
 /.nyc_output
 
 # dist
-lib/*.js
+# lib/*.js
 test/*.js
-lib/*.d.ts
+# lib/*.d.ts
 test/*.d.ts
 
 # config
@@ -24,3 +24,4 @@ test/*.d.ts
 
 # locks
 yarn.lock
+pnpm-lock.yaml

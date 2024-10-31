@@ -14,7 +14,7 @@ async function parse(
 ): Promise<Source> {
 
   const source = new Source(basename(sourceName), []);
-  const importPattern = /\@import "([.\/\w_-]+)"/gi;
+  const importPattern = /#include "([.\/\w_-]+)"/gi;
   const lines = sourceCode.split("\n");
 
   for (const line of lines) {

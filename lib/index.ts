@@ -1,7 +1,12 @@
-import {basename} from "path";
-import {readFile} from "fs/promises";
-import {LoaderContext} from "webpack";
-import {Program, Source, createSourceMapTree, programToShader} from "./sourcemap";
+import { basename } from "path";
+import { readFile } from "fs/promises";
+import { LoaderContext } from "webpack";
+import {
+  Program,
+  Source,
+  createSourceMapTree,
+  programToShader,
+} from "./sourcemap";
 
 interface LoaderOptions {}
 
@@ -10,9 +15,8 @@ async function parse(
   sourceCode: string,
   sourceName: string,
   context: string,
-  importList: string[],
+  importList: string[]
 ): Promise<Source> {
-
   const source = new Source(basename(sourceName), []);
   const importPattern = /#include "([.\/\w_-]+)"/gi;
   const lines = sourceCode.split("\n");
@@ -20,7 +24,7 @@ async function parse(
   for (const line of lines) {
     let match = importPattern.exec(line);
     if (match != null) {
-      const resolvedPath = await loader.getResolve()(context, match[1]);
+      const resolvedPath = await loader.getResolve()(context, "./" + match[1]);
       loader.addDependency(resolvedPath);
 
       // prevent double circular imports and importing same file multiple times
@@ -28,13 +32,15 @@ async function parse(
         source.lines.push("\n"); // Insert empty line to preserve line number order
       } else {
         importList.push(resolvedPath);
-        source.lines.push(await parse(
-          loader,
-          await readFile(resolvedPath, "utf-8"),
-          basename(resolvedPath),
-          context,
-          importList,
-        ));
+        source.lines.push(
+          await parse(
+            loader,
+            await readFile(resolvedPath, "utf-8"),
+            basename(resolvedPath),
+            context,
+            importList
+          )
+        );
       }
     } else {
       source.lines.push(line);
@@ -57,10 +63,12 @@ export default function (this: LoaderContext<LoaderOptions>, source: string) {
     code: "",
   };
 
-  parse(this, source, this.resourcePath, this.context, [ this.resourcePath ]).then(source => {
-    createSourceMapTree(source, prog);
-    callback(null, `export default ${JSON.stringify(programToShader(prog))}`);
-  }).catch((err) => callback(err));
+  parse(this, source, this.resourcePath, this.context, [this.resourcePath])
+    .then((source) => {
+      createSourceMapTree(source, prog);
+      callback(null, `export default ${JSON.stringify(programToShader(prog))}`);
+    })
+    .catch((err) => callback(err));
 
   return undefined;
 }
